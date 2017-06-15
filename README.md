@@ -1,16 +1,16 @@
-###**프로젝트에 대한 소개**
+### **프로젝트에 대한 소개**
 
 <br>속도가 계속해서 증가하는 테트리스시간이 흐르면서, 레벨이 증가함에 따라, 자기가 증가시키면서 속도가 증가할 수 있다특히 레벨이 올라갈수록 속도는 기하급수적으로 증가하게 된다. <br>
 오픈된 소스(‘Tetromino')를 사용<br>(https://inventwithpython.com/pygame/chapter7.html)
 
-###**기능**
+### **기능**
 
 기본테트리스기능-7개 모양의 블록이 랜덤으로 내려온다-블럭이 쌓인다-블럭이 회전한다-블럭이 보드 위에 닿게되면 게임이 종료된다정지기능블록 자동 밑으로 내리기양방향으로 회전가능게임나가기
 ## **추가기능**
 
 속도 증가- 시간이 흐름에 따라 속도가 증가- 레벨이 올라감에 따라 속도가 증가 (레벨 = 점수/10)- 사용자가 U키를 이용해서 속도를 증가 
 
-**### 요약 및 매뉴얼**
+### **요약 및 매뉴얼**
 
 ![](http://postfiles5.naver.net/MjAxNzA2MTVfMjkg/MDAxNDk3NTAwNTkxMTk3.M3QVoHoSbn2Fv9ycbv17a6sxpdQK5uIO86LD4c7DBQMg.ozIASHyFLgTG2KGGGJ02yUgWKS814COw9iLqsOoIMR0g.JPEG.kimjieun211/%EC%8B%9C%EC%9E%91%ED%99%94%EB%A9%B4.JPG?type=w2)
 
@@ -27,7 +27,7 @@
 
 게임오버 화면
 
-**### 알고리즘 설명**
+### **알고리즘 설명**
 
 블록모양을 array로 나타낸다.블록모양은 random함수를 써서 randomg하게 나타나게 한다.
 빈곳을 .으로 블록이 있는 부분을 0으로 나타내어isValidPosition함수를 통해 충돌체크하고충돌이 일어나지 않으면 그 위치로 이동한다.
