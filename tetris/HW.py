@@ -26,7 +26,7 @@ MOVEDOWNFREQ = 0.1
 XMARGIN = int((WINDOWWIDTH - BOARDWIDTH * BOXSIZE) / 2)
 TOPMARGIN = WINDOWHEIGHT - (BOARDHEIGHT * BOXSIZE) - 5
 
-#색깔
+#색
 #               R    G    B
 WHITE       = (255, 255, 255)
 GRAY        = (185, 185, 185)
@@ -39,10 +39,15 @@ BLUE        = (  0,   0, 155)
 LIGHTBLUE   = ( 20,  20, 175)
 YELLOW      = (155, 155,   0)
 LIGHTYELLOW = (175, 175,  20)
+PINK        = (255, 216, 216)
 
+#테트리스 경계 색
 BORDERCOLOR = BLUE
-BGCOLOR = BLACK
+#테트리스 색
+BGCOLOR = PINK
+#글자 색
 TEXTCOLOR = WHITE
+#글자 그림자 색
 TEXTSHADOWCOLOR = GRAY
 COLORS      = (     BLUE,      GREEN,      RED,      YELLOW)
 LIGHTCOLORS = (LIGHTBLUE, LIGHTGREEN, LIGHTRED, LIGHTYELLOW)
@@ -163,16 +168,18 @@ PIECES = {'S': S_SHAPE_TEMPLATE,
           'T': T_SHAPE_TEMPLATE}
 
 
+#테트리스 본 게임
 def main():
     global FPSCLOCK, DISPLAYSURF, BASICFONT, BIGFONT
     pygame.init()
     FPSCLOCK = pygame.time.Clock()
     DISPLAYSURF = pygame.display.set_mode((WINDOWWIDTH, WINDOWHEIGHT))
-    BASICFONT = pygame.font.Font('freesansbold.ttf', 18)
-    BIGFONT = pygame.font.Font('freesansbold.ttf', 100)
+    BASICFONT = pygame.font.Font('style.ttf', 18)
+    BIGFONT = pygame.font.Font('style.ttf', 100)
     pygame.display.set_caption('Tetris')
-
+    
     showTextScreen('Tetris')
+    
     while True: # game loop
         if random.randint(0, 1) == 0:
             pygame.mixer.music.load('tetrisb.mid')
@@ -194,7 +201,8 @@ def runGame():
     movingLeft = False
     movingRight = False
     score = 0
-    level, fallFreq = calculateLevelAndFallFreq(score)
+    fallFreq = 0.27
+    level, fallFreq = calculateLevelAndFallFreq(score,fallFreq)
 
     fallingPiece = getNewPiece()
     nextPiece = getNewPiece()
@@ -210,6 +218,7 @@ def runGame():
                 return # can't fit a new piece on the board, so game over
 
         checkForQuit()
+        
         for event in pygame.event.get(): # event handling loop
             #키 눌었다 뗌
             if event.type == KEYUP:
@@ -229,6 +238,8 @@ def runGame():
                     movingRight = False
                 elif (event.key == K_DOWN or event.key == K_s):
                     movingDown = False
+                elif (event.key == K_u):
+                    fallFreq -= 0.02
 
             #키 누름
             elif event.type == KEYDOWN:
@@ -272,6 +283,7 @@ def runGame():
                             break
                     fallingPiece['y'] += i - 1
 
+
         # handle moving the piece because of user input
         if (movingLeft or movingRight) and time.time() - lastMoveSidewaysTime > MOVESIDEWAYSFREQ:
             if movingLeft and isValidPosition(board, fallingPiece, adjX=-1):
@@ -286,12 +298,10 @@ def runGame():
 
         # let the piece fall if it is time to fall
         if time.time() - lastFallTime > fallFreq:
-            # see if the piece has landed
             if not isValidPosition(board, fallingPiece, adjY=1):
-                # falling piece has landed, set it on the board
                 addToBoard(board, fallingPiece)
                 score += removeCompleteLines(board)
-                level, fallFreq = calculateLevelAndFallFreq(score)
+                level, fallFreq = calculateLevelAndFallFreq(score,fallFreq)
                 fallingPiece = None
             else:
                 # piece did not land, just move the piece down
@@ -301,7 +311,7 @@ def runGame():
         # drawing everything on the screen
         DISPLAYSURF.fill(BGCOLOR)
         drawBoard(board)
-        drawStatus(score, level)
+        drawStatus(score, level, fallFreq)
         drawNextPiece(nextPiece)
         if fallingPiece != None:
             drawPiece(fallingPiece)
@@ -310,6 +320,7 @@ def runGame():
         FPSCLOCK.tick(FPS)
 
 
+#text만들기
 def makeTextObjs(text, font, color):
     surf = font.render(text, True, color)
     return surf, surf.get_rect()
@@ -325,6 +336,7 @@ def checkForKeyPress():
     # Grab KEYDOWN events to remove them from the event queue.
     checkForQuit()
 
+    #키를 눌렀다 떼면 None return함
     for event in pygame.event.get([KEYDOWN, KEYUP]):
         if event.type == KEYDOWN:
             continue
@@ -333,9 +345,17 @@ def checkForKeyPress():
 
 
 def showTextScreen(text):
+
+    #게임 첫시작 배경화면
+    background_image = pygame.image.load('background.jpg').convert()
+    background_image = pygame.transform.scale(background_image, (WINDOWWIDTH, WINDOWHEIGHT))
+    background_position = [0, 0]
+    DISPLAYSURF.blit(background_image, background_position)
+
+    
     # This function displays large text in the
     # center of the screen until a key is pressed.
-    # Draw the text drop shadow
+    # Draw the text drop shadow(text 그림자)
     titleSurf, titleRect = makeTextObjs(text, BIGFONT, TEXTSHADOWCOLOR)
     titleRect.center = (int(WINDOWWIDTH / 2), int(WINDOWHEIGHT / 2))
     DISPLAYSURF.blit(titleSurf, titleRect)
@@ -364,11 +384,11 @@ def checkForQuit():
         pygame.event.post(event) # put the other KEYUP event objects back
 
 
-def calculateLevelAndFallFreq(score):
+def calculateLevelAndFallFreq(score,fallFreq):
     # Based on the score, return the level the player is on and
     # how many seconds pass until a falling piece falls one space.
     level = int(score / 10) + 1
-    fallFreq = 0.27 - (level * 0.02)
+    fallFreq -= (level * 0.005)
     return level, fallFreq
 
 def getNewPiece():
@@ -390,6 +410,7 @@ def addToBoard(board, piece):
                 board[x + piece['x']][y + piece['y']] = piece['color']
 
 
+#보드에 빈부분
 def getBlankBoard():
     # create and return a new blank board data structure
     board = []
@@ -398,6 +419,7 @@ def getBlankBoard():
     return board
 
 
+#
 def isOnBoard(x, y):
     return x >= 0 and x < BOARDWIDTH and y < BOARDHEIGHT
 
@@ -476,7 +498,7 @@ def drawBoard(board):
             drawBox(x, y, board[x][y])
 
 
-def drawStatus(score, level):
+def drawStatus(score, level, fallFreq):
     # draw the score text
     scoreSurf = BASICFONT.render('Score: %s' % score, True, TEXTCOLOR)
     scoreRect = scoreSurf.get_rect()
@@ -488,6 +510,16 @@ def drawStatus(score, level):
     levelRect = levelSurf.get_rect()
     levelRect.topleft = (WINDOWWIDTH - 150, 50)
     DISPLAYSURF.blit(levelSurf, levelRect)
+
+    # draw the fallFreq text
+    fallFreqSurf = BASICFONT.render('fallFreq: %s' % fallFreq, True, TEXTCOLOR)
+    fallFreqRect = fallFreqSurf.get_rect()
+    fallFreqRect.topleft = (WINDOWWIDTH - 150, 80)
+    DISPLAYSURF.blit(fallFreqSurf, fallFreqRect)
+
+    uKeySurf, uKeyRect = makeTextObjs('Speed up : the key_U', BASICFONT, RED)
+    uKeyRect.center = (WINDOWWIDTH - 100, 130)
+    DISPLAYSURF.blit(uKeySurf, uKeyRect)
 
 
 def drawPiece(piece, pixelx=None, pixely=None):
@@ -507,11 +539,11 @@ def drawNextPiece(piece):
     # draw the "next" text
     nextSurf = BASICFONT.render('Next:', True, TEXTCOLOR)
     nextRect = nextSurf.get_rect()
-    nextRect.topleft = (WINDOWWIDTH - 120, 80)
+    nextRect.topleft = (WINDOWWIDTH - 120, 350)
     DISPLAYSURF.blit(nextSurf, nextRect)
     # draw the "next" piece
-    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=100)
-
+    drawPiece(piece, pixelx=WINDOWWIDTH-120, pixely=370)
+    
 
 if __name__ == '__main__':
     main()
